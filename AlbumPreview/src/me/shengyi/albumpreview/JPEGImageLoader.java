@@ -56,14 +56,15 @@ public class JPEGImageLoader {
 			this.cameraInfo = metadata.findEXIFValue(ExifTagConstants.EXIF_TAG_MAKE).getValueDescription() 
 					+ metadata.findEXIFValue(ExifTagConstants.EXIF_TAG_MODEL).getValueDescription();			
 			
-		} catch (IOException | SanselanException | ParseException | NullPointerException e) {	
+		} catch (IOException e) {
 			img = new BufferedImage(512, 512, BufferedImage.TYPE_INT_ARGB_PRE);
 			Graphics2D g2dText = img.createGraphics();
-			g2dText.drawString("ERROR: Cannot open file!", 0, 512/2);
+			g2dText.drawString("ERROR: Cannot open file!", 3, 512/2);
 			setJpegImage(img);
+		}
+		catch (SanselanException | ParseException | NullPointerException e) {			
 			this.takenDate = "";
-			this.cameraInfo = "";
-			e.printStackTrace();
+			this.cameraInfo = "";			
 		}
 		
 		return getJpegImage();

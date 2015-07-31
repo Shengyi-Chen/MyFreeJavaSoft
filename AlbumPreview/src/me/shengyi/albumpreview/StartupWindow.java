@@ -9,7 +9,9 @@ import javax.swing.border.EmptyBorder;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.ResourceBundle;
+
 import javax.swing.DefaultListModel;
+import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JToolBar;
 import javax.swing.JScrollPane;
@@ -40,6 +42,7 @@ import java.awt.Color;
 import java.awt.event.MouseMotionAdapter;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
+import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 
 import javax.swing.JToggleButton;
@@ -77,7 +80,9 @@ public class StartupWindow extends JFrame {
 	private JList<String> list;
 	private DefaultListModel<String> listModel = new DefaultListModel<String>();
 	private ArrayList<File> albumPhotoFiles = new ArrayList<File>();	
-	private JScrollPane scrollPane_1;
+	private JScrollPane scrollPanePic;
+	private int lastImageExtendWidth = 0;
+	private static StartupWindow frame;
 	/**
 	 * Launch the application.
 	 */
@@ -85,7 +90,7 @@ public class StartupWindow extends JFrame {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					StartupWindow frame = new StartupWindow();
+					frame = new StartupWindow();
 					frame.setVisible(true);
 					
 				} catch (Exception e) {
@@ -104,7 +109,7 @@ public class StartupWindow extends JFrame {
 		setUndecorated(true);
 		setTitle(ResourceBundle.getBundle("me.shengyi.albumpreview.messages").getString("Window_Titile")); //$NON-NLS-1$ //$NON-NLS-2$
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 837, 805);
+		setBounds(100, 100, 835, 810);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
@@ -139,7 +144,7 @@ public class StartupWindow extends JFrame {
 					public String getDescription() {
 						return "JPEG images (.jpeg, .jpg)";
 					}};
-				JFileChooser jFc = new JFileChooser();
+				JFileChooser jFc = new JFileChooser();				
 				jFc.setDialogTitle(ResourceBundle.getBundle("me.shengyi.albumpreview.messages").getString("StartupWindow.jFc.DialogTitle.text"));//ResourceBundle.getBundle("me.shengyi.albumpreview.messages").getString("StartupWindow.lblAddPhotos.text")
 				jFc.setFileFilter(imageFilter);
 				jFc.setAcceptAllFileFilterUsed(false);
@@ -190,6 +195,7 @@ public class StartupWindow extends JFrame {
 			}
 			@Override
 			public void mouseReleased(MouseEvent e) {
+				storedLocation = getLocation();
 				mouseDownCompCoords = null;
 			}
 		});
@@ -219,6 +225,7 @@ public class StartupWindow extends JFrame {
 			}
 			@Override
 			public void mouseReleased(MouseEvent e) {
+				storedLocation = getLocation();
 				mouseDownCompCoords = null;
 			}
 		});
@@ -228,6 +235,8 @@ public class StartupWindow extends JFrame {
 		btnPreviewSettings.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				//TODO: Load settings dialog.
+				SettingsDialog cfgDialog = new SettingsDialog(frame);
+				cfgDialog.setVisible(true);
 			}
 		});
 		toolBar.add(btnPreviewSettings);
@@ -282,20 +291,6 @@ public class StartupWindow extends JFrame {
 		toolBar.add(btnOpen);
 		toolBar.add(btnCreate);
 		
-		toggleButton = new JToggleButton(ResourceBundle.getBundle("me.shengyi.albumpreview.messages").getString("StartupWindow.toggleButton.text")); //$NON-NLS-1$ //$NON-NLS-2$
-		toggleButton.addChangeListener(new ChangeListener() {
-			public void stateChanged(ChangeEvent e) {
-				if(((JToggleButton) e.getSource()).isSelected() && (getExtendedState() == JFrame.NORMAL)) {
-					setMaximumSize();						
-				}
-				if (!((JToggleButton) e.getSource()).isSelected() && (getExtendedState() == JFrame.MAXIMIZED_BOTH)){					
-					restoreNormalSize();
-				}
-					
-			}
-		});
-		toolBar.add(toggleButton);
-		
 		JButton btnX = new JButton(ResourceBundle.getBundle("me.shengyi.albumpreview.messages").getString("StartupWindow.btnX.text")); //$NON-NLS-1$ //$NON-NLS-2$
 		btnX.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -303,6 +298,30 @@ public class StartupWindow extends JFrame {
 				dispose();
 			}
 		});
+		
+		toggleButton = new JToggleButton(ResourceBundle.getBundle("me.shengyi.albumpreview.messages").getString("StartupWindow.toggleButton.text"));
+		toggleButton.setVisible(false);
+		toggleButton.setEnabled(false);
+		toggleButton.addChangeListener(new ChangeListener() {
+			public void stateChanged(ChangeEvent e) {
+				if (list.getSelectedIndex()>-1){
+					if(((JToggleButton) e.getSource()).isSelected()){
+						
+					}else{
+						
+					}
+				}
+				
+				/*if(((JToggleButton) e.getSource()).isSelected() && (getExtendedState() == JFrame.NORMAL)) {
+					setMaximumSize();						
+				}
+				if (!((JToggleButton) e.getSource()).isSelected() && (getExtendedState() == JFrame.MAXIMIZED_BOTH)){					
+					restoreNormalSize();
+				}*/
+					
+			}
+		});
+		toolBar.add(toggleButton);
 		toolBar.add(btnX);
 		
 		JScrollPane scrollPane = new JScrollPane();
@@ -316,13 +335,15 @@ public class StartupWindow extends JFrame {
 		gbl_panel_1.rowWeights = new double[]{1.0, 1.0};
 		panel_1.setLayout(gbl_panel_1);
 		
-		scrollPane_1 = new JScrollPane();
-		GridBagConstraints gbc_scrollPane_1 = new GridBagConstraints();
-		gbc_scrollPane_1.insets = new Insets(0, 0, 5, 0);
-		gbc_scrollPane_1.fill = GridBagConstraints.BOTH;
-		gbc_scrollPane_1.gridx = 0;
-		gbc_scrollPane_1.gridy = 0;
-		panel_1.add(scrollPane_1, gbc_scrollPane_1);
+		scrollPanePic = new JScrollPane();
+		GridBagConstraints gbc_scrollPanePic = new GridBagConstraints();
+		gbc_scrollPanePic.insets = new Insets(0, 0, 5, 0);
+		gbc_scrollPanePic.fill = GridBagConstraints.BOTH;
+		gbc_scrollPanePic.gridx = 0;
+		gbc_scrollPanePic.gridy = 0;
+		panel_1.add(scrollPanePic, gbc_scrollPanePic);
+		//TODO: Test please delete!
+		
 		
 		JPanel panel_2 = new JPanel();
 		GridBagConstraints gbc_panel_2 = new GridBagConstraints();
@@ -398,7 +419,7 @@ public class StartupWindow extends JFrame {
 		
 		JPanel panel = new JPanel();
 		contentPane.add(panel, BorderLayout.WEST);
-		panel.setLayout(new GridLayout(0, 1, 0, 0));
+		panel.setLayout(new BorderLayout(0, 0));
 		
 		JScrollPane scrollPane_2 = new JScrollPane();
 		
@@ -445,11 +466,33 @@ public class StartupWindow extends JFrame {
 				@Override
 	            protected void paintComponent(Graphics g) {
 	                super.paintComponent(g);
-	                g.drawImage(img, 0, 0, null);
+	                int newPicWidth = (img.getWidth()*640)/img.getHeight();
+	                int newPicHeight = 640; //fixed height
+	                g.drawImage(img, (scrollPanePic.getWidth() - newPicWidth) / 2, (scrollPanePic.getHeight() - newPicHeight) / 2, newPicWidth, newPicHeight, null);
 	            }
 			};
-			scrollPane_1.setViewportView(panel_canvas);
-			panel_canvas.setPreferredSize(new Dimension(img.getWidth(), img.getHeight()));
+			scrollPanePic.setViewportView(panel_canvas);
+			
+			panel_canvas.setPreferredSize(new Dimension((img.getWidth()*640)/img.getHeight(), 640));
+			int imageExtendWidth = (img.getWidth()*640)/img.getHeight() - 560;
+			System.out.println("width: " + scrollPanePic.getWidth() 
+					+ " Window width: " + getBounds().getWidth()
+					+ " imageExtendWidth: "+ imageExtendWidth
+					);
+			
+			if (imageExtendWidth > 0){
+				if (lastImageExtendWidth != imageExtendWidth){
+					setBounds(new Rectangle((int)getBounds().getWidth() + imageExtendWidth, (int)getBounds().getHeight()));
+					setLocation(storedLocation);
+					lastImageExtendWidth = imageExtendWidth;
+				}
+			}			
+			else{				
+				setBounds(new Rectangle(835, (int)getBounds().getHeight()));
+				setLocation(storedLocation);
+				lastImageExtendWidth = imageExtendWidth;
+			}
+			
 			
 			textFieldFile.setText(selectedFile.getAbsolutePath());
 			textFieldDim.setText(img.getWidth() + " X " + img.getHeight());
