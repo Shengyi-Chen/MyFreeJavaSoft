@@ -7,7 +7,9 @@ import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.ResourceBundle;
+import java.util.AbstractMap.SimpleEntry;
 
 import javax.swing.DefaultListModel;
 import javax.swing.JFileChooser;
@@ -24,6 +26,8 @@ import com.jgoodies.forms.layout.RowSpec;
 
 import javax.swing.BoxLayout;
 
+import java.awt.Dimension;
+import java.awt.Graphics;
 import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
 import java.awt.Insets;
@@ -41,30 +45,39 @@ import java.awt.Color;
 import java.awt.event.MouseMotionAdapter;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
+import java.awt.image.BufferedImage;
 
 import javax.swing.JToggleButton;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.ChangeEvent;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.ListSelectionModel;
+
 import java.awt.GridLayout;
+import java.awt.Font;
+
+import javax.swing.event.ListSelectionListener;
+import javax.swing.event.ListSelectionEvent;
 
 
 public class StartupWindow extends JFrame {
 
 	private JPanel contentPane;
-	private JTextField textField_1;
-	private JTextField textField;
+	private JTextField textFieldTitle;
+	private JTextField textFieldFile;
 	private JTextField textField_2;
 	private JTextField textField_3;
-	private JTextField textField_4;
+	private JTextField textFieldDim;
 	private JTextField textField_5;
 
 	private Point mouseDownCompCoords;
 	private Rectangle storedBounds;
 	private Point storedLocation;
 	private JToggleButton toggleButton;
+	private JList<String> list;
 	private DefaultListModel<String> listModel = new DefaultListModel<String>();
+	private ArrayList<File> albumPhotoFiles = new ArrayList<File>();	
+	private JScrollPane scrollPane_1;
 	/**
 	 * Launch the application.
 	 */
@@ -108,8 +121,7 @@ public class StartupWindow extends JFrame {
 					private final String[] okFileExtensions = new String[] {".jpeg", ".jpg"};
 
 					@Override
-					public boolean accept(File f) {
-						// TODO Auto-generated method stub
+					public boolean accept(File f) {						
 						if (f.isDirectory()) {
 				            return true;
 				        }			 
@@ -125,7 +137,6 @@ public class StartupWindow extends JFrame {
 
 					@Override
 					public String getDescription() {
-						// TODO Auto-generated method stub
 						return "JPEG images (.jpeg, .jpg)";
 					}};
 				JFileChooser jFc = new JFileChooser();
@@ -139,7 +150,8 @@ public class StartupWindow extends JFrame {
 	            if (returnVal == JFileChooser.APPROVE_OPTION) {
 	            	File[] files = jFc.getSelectedFiles();	            	
 	            	//listModel.clear();
-	            	for (File fileName : files){	            		
+	            	for (File fileName : files){
+	            		albumPhotoFiles.add(fileName);
 	            		listModel.addElement(fileName.getName());
 	            	}	            
 			}
@@ -147,6 +159,16 @@ public class StartupWindow extends JFrame {
 		toolBar.add(btnBrowse);
 		
 		JButton btnDelete = new JButton(ResourceBundle.getBundle("me.shengyi.albumpreview.messages").getString("StartupWindow.btnDelete.text")); //$NON-NLS-1$ //$NON-NLS-2$
+		btnDelete.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				int selectI = list.getSelectedIndex();
+				if(selectI>-1){
+					list.setSelectedIndex(-1);
+					listModel.remove(selectI);
+					//TODO: Clear View
+				}
+			}
+		});
 		toolBar.add(btnDelete);
 		
 		JSeparator separator = new JSeparator();
@@ -174,6 +196,7 @@ public class StartupWindow extends JFrame {
 		toolBar.add(separator);
 		
 		JLabel lblNewLabel = new JLabel(ResourceBundle.getBundle("me.shengyi.albumpreview.messages").getString("StartupWindow.lblNewLabel.text_1")); //$NON-NLS-1$ //$NON-NLS-2$
+		lblNewLabel.setFont(new Font("Tahoma", Font.BOLD, 18));
 		lblNewLabel.setForeground(Color.RED);
 		toolBar.add(lblNewLabel);
 		
@@ -202,9 +225,61 @@ public class StartupWindow extends JFrame {
 		toolBar.add(separator_1);
 		
 		JButton btnPreviewSettings = new JButton(ResourceBundle.getBundle("me.shengyi.albumpreview.messages").getString("StartupWindow.btnPreviewSettings.text")); //$NON-NLS-1$ //$NON-NLS-2$
+		btnPreviewSettings.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				//TODO: Load settings dialog.
+			}
+		});
 		toolBar.add(btnPreviewSettings);
 		
 		JButton btnCreate = new JButton(ResourceBundle.getBundle("me.shengyi.albumpreview.messages").getString("StartupWindow.btnCreate.text")); //$NON-NLS-1$ //$NON-NLS-2$
+		btnCreate.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				//TODO: Create Album database.
+			}
+		});
+		
+		JButton btnOpen = new JButton(ResourceBundle.getBundle("me.shengyi.albumpreview.messages").getString("StartupWindow.btnOpen.text")); //$NON-NLS-1$ //$NON-NLS-2$
+		btnOpen.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				FileFilter albumFilter = new FileFilter(){
+					private final String[] okFileExtensions = new String[] {".albump", ".db"};
+	
+					@Override
+					public boolean accept(File f) {						
+						if (f.isDirectory()) {
+				            return true;
+				        }			 
+				        
+				        for (String extension : okFileExtensions)
+				        {
+				        	if(f.getName().toLowerCase().endsWith(extension)){
+				        		return true;
+				        	}			        	
+				        }			 
+				        return false;
+					}
+	
+					@Override
+					public String getDescription() {
+						return "Album Prview Database (.albump, .db)";
+					}};
+				
+				JFileChooser jAlbFc = new JFileChooser();
+				jAlbFc.setDialogTitle(ResourceBundle.getBundle("me.shengyi.albumpreview.messages").getString("StartupWindow.jAlbFc.DialogTitle.text"));
+				jAlbFc.setFileFilter(albumFilter);
+				jAlbFc.setAcceptAllFileFilterUsed(false);
+				jAlbFc.setFileSelectionMode(JFileChooser.FILES_ONLY);
+				jAlbFc.setMultiSelectionEnabled(false);
+				
+				int returnVal = jAlbFc.showOpenDialog(getParent());
+	            if (returnVal == JFileChooser.APPROVE_OPTION) {
+	            	File file = jAlbFc.getSelectedFile();
+	            	//TODO: open Album
+	            	}
+	            }
+		});
+		toolBar.add(btnOpen);
 		toolBar.add(btnCreate);
 		
 		toggleButton = new JToggleButton(ResourceBundle.getBundle("me.shengyi.albumpreview.messages").getString("StartupWindow.toggleButton.text")); //$NON-NLS-1$ //$NON-NLS-2$
@@ -241,7 +316,7 @@ public class StartupWindow extends JFrame {
 		gbl_panel_1.rowWeights = new double[]{1.0, 1.0};
 		panel_1.setLayout(gbl_panel_1);
 		
-		JScrollPane scrollPane_1 = new JScrollPane();
+		scrollPane_1 = new JScrollPane();
 		GridBagConstraints gbc_scrollPane_1 = new GridBagConstraints();
 		gbc_scrollPane_1.insets = new Insets(0, 0, 5, 0);
 		gbc_scrollPane_1.fill = GridBagConstraints.BOTH;
@@ -272,18 +347,18 @@ public class StartupWindow extends JFrame {
 		JLabel lblName = new JLabel(ResourceBundle.getBundle("me.shengyi.albumpreview.messages").getString("StartupWindow.lblName.text_1")); //$NON-NLS-1$ //$NON-NLS-2$
 		panel_2.add(lblName, "2, 2, right, center");
 		
-		textField_1 = new JTextField();
-		textField_1.setText("");
-		panel_2.add(textField_1, "3, 2, fill, top");
-		textField_1.setColumns(10);
+		textFieldTitle = new JTextField();
+		textFieldTitle.setText("");
+		panel_2.add(textFieldTitle, "3, 2, fill, top");
+		textFieldTitle.setColumns(10);
 		
 		JLabel lblFile = new JLabel(ResourceBundle.getBundle("me.shengyi.albumpreview.messages").getString("StartupWindow.lblFile.text_1")); //$NON-NLS-1$ //$NON-NLS-2$
 		panel_2.add(lblFile, "4, 2, right, center");
 		
-		textField = new JTextField();
-		textField.setText("");
-		textField.setColumns(10);
-		panel_2.add(textField, "5, 2, fill, default");
+		textFieldFile = new JTextField();
+		textFieldFile.setText("");
+		textFieldFile.setColumns(10);
+		panel_2.add(textFieldFile, "5, 2, fill, default");
 		
 		JLabel lblDate = new JLabel(ResourceBundle.getBundle("me.shengyi.albumpreview.messages").getString("StartupWindow.lblDate.text_1")); //$NON-NLS-1$ //$NON-NLS-2$
 		panel_2.add(lblDate, "2, 4, right, default");
@@ -305,11 +380,11 @@ public class StartupWindow extends JFrame {
 		JLabel lblDimensions = new JLabel(ResourceBundle.getBundle("me.shengyi.albumpreview.messages").getString("StartupWindow.lblDimensions.text")); //$NON-NLS-1$ //$NON-NLS-2$
 		panel_2.add(lblDimensions, "2, 6, right, default");
 		
-		textField_4 = new JTextField();
-		textField_4.setEditable(false);
-		textField_4.setText("");
-		panel_2.add(textField_4, "3, 6, fill, default");
-		textField_4.setColumns(10);
+		textFieldDim = new JTextField();
+		textFieldDim.setEditable(false);
+		textFieldDim.setText("");
+		panel_2.add(textFieldDim, "3, 6, fill, default");
+		textFieldDim.setColumns(10);
 		
 		JLabel lblCamera = new JLabel(ResourceBundle.getBundle("me.shengyi.albumpreview.messages").getString("StartupWindow.lblCamera.text")); //$NON-NLS-1$ //$NON-NLS-2$
 		panel_2.add(lblCamera, "4, 6, right, default");
@@ -328,7 +403,17 @@ public class StartupWindow extends JFrame {
 		
 		panel.add(scrollPane_2);
 		
-		JList list = new JList();
+		list = new JList<String>();
+		list.addListSelectionListener(new ListSelectionListener() {
+			public void valueChanged(ListSelectionEvent e) {
+				//TODO: Draw photo and show info, setMainView
+				if (e.getValueIsAdjusting()){
+					int selectedIndex = ((JList) e.getSource()).getSelectedIndex();
+					if (selectedIndex>-1)
+					setMainView(albumPhotoFiles.get(selectedIndex));
+				}
+			}
+		});
 		list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		list.setModel(listModel);
 		scrollPane_2.setViewportView(list);
@@ -344,5 +429,29 @@ public class StartupWindow extends JFrame {
 		setExtendedState(JFrame.NORMAL);
 		setBounds(storedBounds);
 		setLocation(storedLocation);
+	}
+	
+	private void setMainView(File selectedFile){
+		JPEGImageLoader jpegiLoader = new JPEGImageLoader(selectedFile);
+		BufferedImage img = jpegiLoader.loadImage();
+		if (img != null){			
+			JPanel panel_canvas = new JPanel(){
+				/**
+				 * 
+				 */
+				private static final long serialVersionUID = 2048L;
+
+				@Override
+	            protected void paintComponent(Graphics g) {
+	                super.paintComponent(g);
+	                g.drawImage(img, 0, 0, null);
+	            }
+			};
+			scrollPane_1.setViewportView(panel_canvas);
+			panel_canvas.setPreferredSize(new Dimension(img.getWidth(), img.getHeight()));
+			
+			textFieldFile.setText(selectedFile.getAbsolutePath());
+			textFieldDim.setText(img.getWidth() + " X " + img.getHeight());
+		}
 	}
 }
