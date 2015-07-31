@@ -9,8 +9,6 @@ import javax.swing.border.EmptyBorder;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.ResourceBundle;
-import java.util.AbstractMap.SimpleEntry;
-
 import javax.swing.DefaultListModel;
 import javax.swing.JFileChooser;
 import javax.swing.JToolBar;
@@ -24,8 +22,6 @@ import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.RowSpec;
 
-import javax.swing.BoxLayout;
-
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.GridBagLayout;
@@ -38,7 +34,6 @@ import com.jgoodies.forms.factories.FormFactory;
 
 import javax.swing.JSeparator;
 
-import java.awt.Window.Type;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.Color;
@@ -62,13 +57,18 @@ import javax.swing.event.ListSelectionEvent;
 
 public class StartupWindow extends JFrame {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -3521345556169940549L;
+	
 	private JPanel contentPane;
 	private JTextField textFieldTitle;
 	private JTextField textFieldFile;
-	private JTextField textField_2;
+	private JTextField textFieldDate;
 	private JTextField textField_3;
 	private JTextField textFieldDim;
-	private JTextField textField_5;
+	private JTextField textFieldCamera;
 
 	private Point mouseDownCompCoords;
 	private Rectangle storedBounds;
@@ -274,7 +274,7 @@ public class StartupWindow extends JFrame {
 				
 				int returnVal = jAlbFc.showOpenDialog(getParent());
 	            if (returnVal == JFileChooser.APPROVE_OPTION) {
-	            	File file = jAlbFc.getSelectedFile();
+	            	//File file = jAlbFc.getSelectedFile();
 	            	//TODO: open Album
 	            	}
 	            }
@@ -363,16 +363,17 @@ public class StartupWindow extends JFrame {
 		JLabel lblDate = new JLabel(ResourceBundle.getBundle("me.shengyi.albumpreview.messages").getString("StartupWindow.lblDate.text_1")); //$NON-NLS-1$ //$NON-NLS-2$
 		panel_2.add(lblDate, "2, 4, right, default");
 		
-		textField_2 = new JTextField();
-		textField_2.setEditable(false);
-		textField_2.setText("");
-		panel_2.add(textField_2, "3, 4, fill, default");
-		textField_2.setColumns(10);
+		textFieldDate = new JTextField();
+		textFieldDate.setEditable(false);
+		textFieldDate.setText("");
+		panel_2.add(textFieldDate, "3, 4, fill, default");
+		textFieldDate.setColumns(10);
 		
 		JLabel lblGps = new JLabel(ResourceBundle.getBundle("me.shengyi.albumpreview.messages").getString("StartupWindow.lblGps.text")); //$NON-NLS-1$ //$NON-NLS-2$
 		panel_2.add(lblGps, "4, 4, right, default");
 		
 		textField_3 = new JTextField();
+		textField_3.setEditable(false);
 		textField_3.setText("");
 		panel_2.add(textField_3, "5, 4, fill, default");
 		textField_3.setColumns(10);
@@ -389,11 +390,11 @@ public class StartupWindow extends JFrame {
 		JLabel lblCamera = new JLabel(ResourceBundle.getBundle("me.shengyi.albumpreview.messages").getString("StartupWindow.lblCamera.text")); //$NON-NLS-1$ //$NON-NLS-2$
 		panel_2.add(lblCamera, "4, 6, right, default");
 		
-		textField_5 = new JTextField();
-		textField_5.setEditable(false);
-		textField_5.setText("");
-		panel_2.add(textField_5, "5, 6, fill, default");
-		textField_5.setColumns(10);
+		textFieldCamera = new JTextField();
+		textFieldCamera.setEditable(false);
+		textFieldCamera.setText("");
+		panel_2.add(textFieldCamera, "5, 6, fill, default");
+		textFieldCamera.setColumns(10);
 		
 		JPanel panel = new JPanel();
 		contentPane.add(panel, BorderLayout.WEST);
@@ -452,6 +453,8 @@ public class StartupWindow extends JFrame {
 			
 			textFieldFile.setText(selectedFile.getAbsolutePath());
 			textFieldDim.setText(img.getWidth() + " X " + img.getHeight());
+			textFieldDate.setText(jpegiLoader.getTakenDate());
+			textFieldCamera.setText(jpegiLoader.getCameraInfo());
 		}
 	}
 }
