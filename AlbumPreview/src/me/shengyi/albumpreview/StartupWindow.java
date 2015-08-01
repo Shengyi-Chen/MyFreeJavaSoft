@@ -26,6 +26,7 @@ import com.jgoodies.forms.layout.RowSpec;
 
 import java.awt.Dimension;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
 import java.awt.Insets;
@@ -48,6 +49,8 @@ import java.awt.image.BufferedImage;
 import javax.swing.JToggleButton;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.ChangeEvent;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.ListSelectionModel;
 
@@ -56,6 +59,12 @@ import java.awt.Font;
 
 import javax.swing.event.ListSelectionListener;
 import javax.swing.event.ListSelectionEvent;
+
+import java.awt.event.InputMethodListener;
+import java.awt.event.InputMethodEvent;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
+import java.awt.FlowLayout;
 
 
 public class StartupWindow extends JFrame {
@@ -67,7 +76,6 @@ public class StartupWindow extends JFrame {
 	
 	private JPanel contentPane;
 	private JTextField textFieldTitle;
-	private JTextField textFieldFile;
 	private JTextField textFieldDate;
 	private JTextField textField_3;
 	private JTextField textFieldDim;
@@ -83,9 +91,14 @@ public class StartupWindow extends JFrame {
 	private JScrollPane scrollPanePic;
 	private int lastImageExtendWidth = 0;
 	private static StartupWindow frame;
-	/**
-	 * Launch the application.
-	 */
+	private static int windowHeight = (int) (java.awt.Toolkit.getDefaultToolkit().getScreenSize().getHeight() * 0.7);
+	private JButton btnSave;
+	
+	private File albumFile = null;
+	
+	/* 
+	* Launch the application.
+	*/
 	public static void main(String[] args) {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
@@ -104,16 +117,20 @@ public class StartupWindow extends JFrame {
 	 * Create the frame.
 	 */
 	public StartupWindow() {
-		storedBounds = getBounds();
-		storedLocation = getLocation();		
+				
 		setUndecorated(true);
 		setTitle(ResourceBundle.getBundle("me.shengyi.albumpreview.messages").getString("Window_Titile")); //$NON-NLS-1$ //$NON-NLS-2$
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		
+		//setBounds(100, 100, 835, windowHeight);
 		setBounds(100, 100, 835, 810);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
 		contentPane.setLayout(new BorderLayout(0, 0));
+		
+		storedBounds = getBounds();
+		storedLocation = getLocation();
 		
 		JToolBar toolBar = new JToolBar();
 		toolBar.setFloatable(false);
@@ -171,6 +188,7 @@ public class StartupWindow extends JFrame {
 					list.setSelectedIndex(-1);
 					listModel.remove(selectI);
 					//TODO: Clear View
+					initialPicView();
 				}
 			}
 		});
@@ -213,7 +231,7 @@ public class StartupWindow extends JFrame {
 				Point currCoods = e.getLocationOnScreen();
 				if (getExtendedState() != JFrame.MAXIMIZED_BOTH){
 					setLocation(currCoods.x - mouseDownCompCoords.x, currCoods.y - mouseDownCompCoords.y);
-				}
+				}				
 			}
 		});
 		separator_1.setForeground(Color.LIGHT_GRAY);
@@ -245,6 +263,42 @@ public class StartupWindow extends JFrame {
 		btnCreate.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				//TODO: Create Album database.
+				//createPreview();
+				FileFilter imageFilter = new FileFilter(){
+					private final String[] okFileExtensions = new String[] {".albump", ".db"};
+
+					@Override
+					public boolean accept(File f) {						
+						if (f.isDirectory()) {
+				            return true;
+				        }			 
+				        
+				        for (String extension : okFileExtensions)
+				        {
+				        	if(f.getName().toLowerCase().endsWith(extension)){
+				        		return true;
+				        	}			        	
+				        }			 
+				        return false;
+					}
+
+					@Override
+					public String getDescription() {
+						return "Album Prview Database (.albump, .db)";
+					}};
+				JFileChooser jFc = new JFileChooser();			
+				jFc.setDialogTitle(ResourceBundle.getBundle("me.shengyi.albumpreview.messages").getString("StartupWindow.jAlbFc.Save.Dialog.Title.Text"));//ResourceBundle.getBundle("me.shengyi.albumpreview.messages").getString("StartupWindow.lblAddPhotos.text")
+				jFc.setFileFilter(imageFilter);
+				jFc.setAcceptAllFileFilterUsed(false);
+				jFc.setFileSelectionMode(JFileChooser.FILES_ONLY);
+				jFc.setMultiSelectionEnabled(false);
+				
+				
+				int returnVal = jFc.showSaveDialog(getParent());
+	            if (returnVal == JFileChooser.APPROVE_OPTION) {
+	            	File file = jFc.getSelectedFile();
+	            	albumFile = file;
+	            }
 			}
 		});
 		
@@ -283,10 +337,11 @@ public class StartupWindow extends JFrame {
 				
 				int returnVal = jAlbFc.showOpenDialog(getParent());
 	            if (returnVal == JFileChooser.APPROVE_OPTION) {
-	            	//File file = jAlbFc.getSelectedFile();
+	            	File file = jAlbFc.getSelectedFile();
 	            	//TODO: open Album
-	            	}
+	            	albumFile = file;
 	            }
+	        }
 		});
 		toolBar.add(btnOpen);
 		toolBar.add(btnCreate);
@@ -330,7 +385,7 @@ public class StartupWindow extends JFrame {
 		JPanel panel_1 = new JPanel();
 		scrollPane.setViewportView(panel_1);
 		GridBagLayout gbl_panel_1 = new GridBagLayout();
-		gbl_panel_1.rowHeights = new int[]{620, 0};
+		gbl_panel_1.rowHeights = new int[]{640, 0};
 		gbl_panel_1.columnWeights = new double[]{1.0};
 		gbl_panel_1.rowWeights = new double[]{1.0, 1.0};
 		panel_1.setLayout(gbl_panel_1);
@@ -341,9 +396,7 @@ public class StartupWindow extends JFrame {
 		gbc_scrollPanePic.fill = GridBagConstraints.BOTH;
 		gbc_scrollPanePic.gridx = 0;
 		gbc_scrollPanePic.gridy = 0;
-		panel_1.add(scrollPanePic, gbc_scrollPanePic);
-		//TODO: Test please delete!
-		
+		panel_1.add(scrollPanePic, gbc_scrollPanePic);		
 		
 		JPanel panel_2 = new JPanel();
 		GridBagConstraints gbc_panel_2 = new GridBagConstraints();
@@ -363,23 +416,69 @@ public class StartupWindow extends JFrame {
 				FormFactory.RELATED_GAP_ROWSPEC,
 				FormFactory.DEFAULT_ROWSPEC,
 				FormFactory.RELATED_GAP_ROWSPEC,
-				FormFactory.DEFAULT_ROWSPEC,}));
+				FormFactory.DEFAULT_ROWSPEC,
+				FormFactory.RELATED_GAP_ROWSPEC,
+				RowSpec.decode("default:grow"),}));
 		
 		JLabel lblName = new JLabel(ResourceBundle.getBundle("me.shengyi.albumpreview.messages").getString("StartupWindow.lblName.text_1")); //$NON-NLS-1$ //$NON-NLS-2$
 		panel_2.add(lblName, "2, 2, right, center");
 		
 		textFieldTitle = new JTextField();
+		
 		textFieldTitle.setText("");
+		textFieldTitle.getDocument().addDocumentListener(new DocumentListener(){
+
+			@Override
+			public void insertUpdate(DocumentEvent e) {
+				// TODO Auto-generated method stub
+				if (textFieldTitle.getText().length()>0){
+					btnSave.setEnabled(true);
+				}else{
+					btnSave.setEnabled(false);
+				}
+			}
+
+			@Override
+			public void removeUpdate(DocumentEvent e) {
+				// TODO Auto-generated method stub
+				if (textFieldTitle.getText().length()>0){
+					btnSave.setEnabled(true);
+				}else{
+					btnSave.setEnabled(false);
+				}
+			}
+
+			@Override
+			public void changedUpdate(DocumentEvent e) {
+				// TODO Auto-generated method stub
+				if (textFieldTitle.getText().length()>0){
+					btnSave.setEnabled(true);
+				}else{
+					btnSave.setEnabled(false);
+				}
+			}
+			
+		});
 		panel_2.add(textFieldTitle, "3, 2, fill, top");
 		textFieldTitle.setColumns(10);
 		
-		JLabel lblFile = new JLabel(ResourceBundle.getBundle("me.shengyi.albumpreview.messages").getString("StartupWindow.lblFile.text_1")); //$NON-NLS-1$ //$NON-NLS-2$
-		panel_2.add(lblFile, "4, 2, right, center");
-		
-		textFieldFile = new JTextField();
-		textFieldFile.setText("");
-		textFieldFile.setColumns(10);
-		panel_2.add(textFieldFile, "5, 2, fill, default");
+		btnSave = new JButton("Save");
+		btnSave.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				//TODO: Save title
+				int selectedIndex = list.getSelectedIndex();
+				if (selectedIndex > -1){
+					JPEGImageLoader imageL = new JPEGImageLoader(albumPhotoFiles.get(selectedIndex));
+					imageL.loadImage();
+					String imageTitle = textFieldTitle.getText();
+					if (null != imageTitle){
+						imageL.setImageTitle(imageTitle);
+					}					
+				}
+			}
+		});
+		btnSave.setFont(new Font("Tahoma", Font.PLAIN, 13));
+		panel_2.add(btnSave, "4, 2");
 		
 		JLabel lblDate = new JLabel(ResourceBundle.getBundle("me.shengyi.albumpreview.messages").getString("StartupWindow.lblDate.text_1")); //$NON-NLS-1$ //$NON-NLS-2$
 		panel_2.add(lblDate, "2, 4, right, default");
@@ -431,8 +530,8 @@ public class StartupWindow extends JFrame {
 				//TODO: Draw photo and show info, setMainView
 				if (e.getValueIsAdjusting()){
 					int selectedIndex = ((JList) e.getSource()).getSelectedIndex();
-					if (selectedIndex>-1)
-					setMainView(albumPhotoFiles.get(selectedIndex));
+					if (selectedIndex > -1)
+						setMainView(albumPhotoFiles.get(selectedIndex));
 				}
 			}
 		});
@@ -453,6 +552,34 @@ public class StartupWindow extends JFrame {
 		setLocation(storedLocation);
 	}
 	
+	private void initialPicView(){
+		BufferedImage img = new BufferedImage(512, 512, BufferedImage.TYPE_INT_ARGB_PRE);
+		Graphics2D g2dText = img.createGraphics();
+		g2dText.setFont(new Font("Times New Roman", Font.BOLD, 22));
+		g2dText.setColor(Color.BLACK);
+		g2dText.drawString("Please selete a file from left!", 125, 512/2);
+		
+		
+		JPanel panel_canvas = new JPanel(){
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = 2048L;
+
+			@Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                int newPicWidth = (img.getWidth()*(int)(windowHeight/1.265))/img.getHeight();
+                int newPicHeight = (int)(windowHeight/1.265); //fixed height
+                g.drawImage(img, (scrollPanePic.getWidth() - newPicWidth) / 2, (scrollPanePic.getHeight() - newPicHeight) / 2, newPicWidth, newPicHeight, null);
+            }
+		};
+		scrollPanePic.setViewportView(panel_canvas);
+
+		panel_canvas.setPreferredSize(new Dimension((img.getWidth()*(int)(windowHeight/1.265))/img.getHeight(), (int)(windowHeight/1.265)));
+		
+	}
+	
 	private void setMainView(File selectedFile){
 		JPEGImageLoader jpegiLoader = new JPEGImageLoader(selectedFile);
 		BufferedImage img = jpegiLoader.loadImage();
@@ -466,20 +593,16 @@ public class StartupWindow extends JFrame {
 				@Override
 	            protected void paintComponent(Graphics g) {
 	                super.paintComponent(g);
-	                int newPicWidth = (img.getWidth()*640)/img.getHeight();
-	                int newPicHeight = 640; //fixed height
+	                int newPicWidth = (img.getWidth()*(int)(windowHeight/1.265))/img.getHeight();
+	                int newPicHeight = (int)(windowHeight/1.265); //fixed height
 	                g.drawImage(img, (scrollPanePic.getWidth() - newPicWidth) / 2, (scrollPanePic.getHeight() - newPicHeight) / 2, newPicWidth, newPicHeight, null);
 	            }
 			};
 			scrollPanePic.setViewportView(panel_canvas);
 			
-			panel_canvas.setPreferredSize(new Dimension((img.getWidth()*640)/img.getHeight(), 640));
-			int imageExtendWidth = (img.getWidth()*640)/img.getHeight() - 560;
-			System.out.println("width: " + scrollPanePic.getWidth() 
-					+ " Window width: " + getBounds().getWidth()
-					+ " imageExtendWidth: "+ imageExtendWidth
-					);
-			
+			panel_canvas.setPreferredSize(new Dimension((img.getWidth()*(int)(windowHeight/1.265))/img.getHeight(), (int)(windowHeight/1.265)));
+			int imageExtendWidth = (img.getWidth()*(int)(windowHeight/1.265))/img.getHeight() - 560;
+						
 			if (imageExtendWidth > 0){
 				if (lastImageExtendWidth != imageExtendWidth){
 					setBounds(new Rectangle((int)getBounds().getWidth() + imageExtendWidth, (int)getBounds().getHeight()));
@@ -493,11 +616,10 @@ public class StartupWindow extends JFrame {
 				lastImageExtendWidth = imageExtendWidth;
 			}
 			
-			
-			textFieldFile.setText(selectedFile.getAbsolutePath());
 			textFieldDim.setText(img.getWidth() + " X " + img.getHeight());
 			textFieldDate.setText(jpegiLoader.getTakenDate());
 			textFieldCamera.setText(jpegiLoader.getCameraInfo());
+			textFieldTitle.setText(jpegiLoader.getImageTitle());
 		}
 	}
 }

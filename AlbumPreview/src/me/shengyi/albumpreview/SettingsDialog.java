@@ -27,7 +27,12 @@ import javax.swing.JCheckBox;
 
 public class SettingsDialog extends JDialog {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -1775763013343814347L;
 	private final JPanel contentPanel = new JPanel();
+	
 	/**
 	 * Create the dialog.
 	 */
@@ -36,7 +41,7 @@ public class SettingsDialog extends JDialog {
 		setForeground(Color.WHITE);
 		setBackground(Color.DARK_GRAY);
 		setModal(true);
-		//setModalExclusionType(JDialog.ModalExclusionType.APPLICATION_EXCLUDE);
+
 		setUndecorated(true);
 		setBounds(100, 100, 600, 500);
 		getContentPane().setLayout(new BorderLayout());
@@ -46,19 +51,21 @@ public class SettingsDialog extends JDialog {
 		
 		getContentPane().add(contentPanel, BorderLayout.CENTER);
 		
+		SettingsDatabase cfgDb = new SettingsDatabase();		
+		
 		JLabel lblGripSize = new JLabel(ResourceBundle.getBundle("me.shengyi.albumpreview.messages").getString("SettingsDialog.lblGripSize.text")); //$NON-NLS-1$ //$NON-NLS-2$
 		lblGripSize.setForeground(Color.WHITE);
 		
-		JSpinner spinner = new JSpinner();
-		spinner.setModel(new SpinnerNumberModel(3, 3, 10, 1));
-		spinner.setForeground(new Color(240, 240, 240));
-		spinner.setBackground(Color.DARK_GRAY);
+		JSpinner spinnerH = new JSpinner();
+		spinnerH.setModel(new SpinnerNumberModel((int)cfgDb.getCfgData().get(OPT_NAME.G_H.ordinal()).getValue(), 3, 10, 1));
+		spinnerH.setForeground(new Color(240, 240, 240));
+		spinnerH.setBackground(Color.DARK_GRAY);
 		
 		JLabel lblRows = new JLabel(ResourceBundle.getBundle("me.shengyi.albumpreview.messages").getString("SettingsDialog.lblRows.text")); //$NON-NLS-1$ //$NON-NLS-2$
 		lblRows.setForeground(Color.WHITE);
 		
-		JSpinner spinner_1 = new JSpinner();
-		spinner_1.setModel(new SpinnerNumberModel(3, 3, 6, 1));
+		JSpinner spinnerW = new JSpinner();
+		spinnerW.setModel(new SpinnerNumberModel((int)cfgDb.getCfgData().get(OPT_NAME.G_W.ordinal()).getValue(), 3, 6, 1));
 		
 		JLabel lblNewLabel = new JLabel(ResourceBundle.getBundle("me.shengyi.albumpreview.messages").getString("SettingsDialog.lblNewLabel.text")); //$NON-NLS-1$ //$NON-NLS-2$
 		lblNewLabel.setForeground(Color.WHITE);
@@ -69,35 +76,43 @@ public class SettingsDialog extends JDialog {
 		JCheckBox chckbxTitle = new JCheckBox(ResourceBundle.getBundle("me.shengyi.albumpreview.messages").getString("SettingsDialog.chckbxTitle.text")); //$NON-NLS-1$ //$NON-NLS-2$
 		chckbxTitle.setBackground(Color.DARK_GRAY);
 		chckbxTitle.setForeground(Color.WHITE);
+		chckbxTitle.setSelected((boolean)cfgDb.getCfgData().get(OPT_NAME.HAS_TITLE.ordinal()).getValue());
 		
 		JCheckBox chckbxDate = new JCheckBox(ResourceBundle.getBundle("me.shengyi.albumpreview.messages").getString("SettingsDialog.chckbxDate.text")); //$NON-NLS-1$ //$NON-NLS-2$
 		chckbxDate.setBackground(Color.DARK_GRAY);
 		chckbxDate.setForeground(Color.WHITE);
+		chckbxDate.setSelected((boolean) cfgDb.getCfgData().get(OPT_NAME.HAS_DATE.ordinal()).getValue());
 		
 		JCheckBox chckbxFileName = new JCheckBox(ResourceBundle.getBundle("me.shengyi.albumpreview.messages").getString("SettingsDialog.chckbxFileName.text")); //$NON-NLS-1$ //$NON-NLS-2$
 		chckbxFileName.setBackground(Color.DARK_GRAY);
 		chckbxFileName.setForeground(Color.WHITE);
+		chckbxFileName.setSelected((boolean)cfgDb.getCfgData().get(OPT_NAME.HAS_NAME.ordinal()).getValue());
 		
 		JLabel lblDatastore = new JLabel(ResourceBundle.getBundle("me.shengyi.albumpreview.messages").getString("SettingsDialog.lblDatastore.text")); //$NON-NLS-1$ //$NON-NLS-2$
 		lblDatastore.setForeground(Color.WHITE);
-		lblDatastore.setBackground(Color.DARK_GRAY);
+		lblDatastore.setBackground(Color.DARK_GRAY);		
 		
 		JRadioButton rdbtnStoreInA = new JRadioButton(ResourceBundle.getBundle("me.shengyi.albumpreview.messages").getString("SettingsDialog.rdbtnStoreInA.text")); //$NON-NLS-1$ //$NON-NLS-2$
 		rdbtnStoreInA.setBackground(Color.DARK_GRAY);
 		rdbtnStoreInA.setForeground(Color.WHITE);
 		
+		
 		JRadioButton rdbtnStoreInFile = new JRadioButton(ResourceBundle.getBundle("me.shengyi.albumpreview.messages").getString("SettingsDialog.rdbtnStoreInFile.text")); //$NON-NLS-1$ //$NON-NLS-2$
 		rdbtnStoreInFile.setForeground(Color.WHITE);
 		rdbtnStoreInFile.setBackground(Color.DARK_GRAY);
+		rdbtnStoreInFile.setSelected(((String)cfgDb.getCfgData().get(OPT_NAME.DB_ST.ordinal()).getValue()).equals("FS"));
 		
 		JRadioButton rdbtnPreviewOnly = new JRadioButton(ResourceBundle.getBundle("me.shengyi.albumpreview.messages").getString("SettingsDialog.rdbtnPreviewOnly.text")); //$NON-NLS-1$ //$NON-NLS-2$
 		rdbtnPreviewOnly.setForeground(Color.WHITE);
 		rdbtnPreviewOnly.setBackground(Color.DARK_GRAY);
+		rdbtnPreviewOnly.setSelected(((String)cfgDb.getCfgData().get(OPT_NAME.DB_ST.ordinal()).getValue()).equals("PO"));
 		
 		ButtonGroup rdbtnGroup = new ButtonGroup();
 		rdbtnGroup.add(rdbtnStoreInA);
 		rdbtnGroup.add(rdbtnStoreInFile);
 		rdbtnGroup.add(rdbtnPreviewOnly);
+		
+		rdbtnStoreInA.setSelected(((String)cfgDb.getCfgData().get(OPT_NAME.DB_ST.ordinal()).getValue()).equals("DB"));
 		
 		GroupLayout gl_contentPanel = new GroupLayout(contentPanel);
 		gl_contentPanel.setHorizontalGroup(
@@ -115,12 +130,12 @@ public class SettingsDialog extends JDialog {
 							.addComponent(chckbxDate))
 						.addGroup(gl_contentPanel.createSequentialGroup()
 							.addGroup(gl_contentPanel.createParallelGroup(Alignment.TRAILING, false)
-								.addComponent(spinner, Alignment.LEADING, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+								.addComponent(spinnerH, Alignment.LEADING, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
 								.addComponent(lblGripSize, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
 							.addPreferredGap(ComponentPlacement.RELATED)
 							.addComponent(lblRows)
 							.addGap(27)
-							.addComponent(spinner_1, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+							.addComponent(spinnerW, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
 							.addPreferredGap(ComponentPlacement.RELATED)
 							.addComponent(lblNewLabel))
 						.addComponent(lblInfomationUnderEach)
@@ -135,10 +150,10 @@ public class SettingsDialog extends JDialog {
 					.addComponent(lblGripSize)
 					.addGap(18)
 					.addGroup(gl_contentPanel.createParallelGroup(Alignment.BASELINE)
-						.addComponent(spinner, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+						.addComponent(spinnerH, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
 						.addComponent(lblRows)
 						.addComponent(lblNewLabel)
-						.addComponent(spinner_1, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
+						.addComponent(spinnerW, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
 					.addGap(26)
 					.addComponent(lblInfomationUnderEach)
 					.addGap(18)
@@ -167,6 +182,23 @@ public class SettingsDialog extends JDialog {
 				okButton.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
 						//TODO: OK pressed
+						cfgDb.saveData(OPT_NAME.G_W, spinnerW.getValue());
+						cfgDb.saveData(OPT_NAME.G_H, spinnerH.getValue());
+						cfgDb.saveData(OPT_NAME.HAS_TITLE, chckbxTitle.isSelected());
+						cfgDb.saveData(OPT_NAME.HAS_DATE, chckbxDate.isSelected());
+						cfgDb.saveData(OPT_NAME.HAS_NAME, chckbxFileName.isSelected());
+						
+						if (rdbtnStoreInA.isSelected()){
+							cfgDb.saveData(OPT_NAME.DB_ST, "DB");
+						}
+						if (rdbtnStoreInFile.isSelected()){
+							cfgDb.saveData(OPT_NAME.DB_ST, "FS");
+						}
+						if (rdbtnPreviewOnly.isSelected()){
+							cfgDb.saveData(OPT_NAME.DB_ST, "PO");
+						}
+						
+						setVisible(false);
 					}
 				});
 				okButton.setForeground(Color.WHITE);
