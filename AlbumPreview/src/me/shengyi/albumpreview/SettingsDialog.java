@@ -24,6 +24,7 @@ import javax.swing.JSpinner;
 import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.JCheckBox;
+import javax.swing.JTextField;
 
 public class SettingsDialog extends JDialog {
 
@@ -32,6 +33,12 @@ public class SettingsDialog extends JDialog {
 	 */
 	private static final long serialVersionUID = -1775763013343814347L;
 	private final JPanel contentPanel = new JPanel();
+	private JTextField textField;
+	//private Byte settingsValue;
+	/* 11 00 00 00 00 - width
+	 * 10 00 00 00 00 - height
+	 * 
+	 * */
 	
 	/**
 	 * Create the dialog.
@@ -95,7 +102,7 @@ public class SettingsDialog extends JDialog {
 		JRadioButton rdbtnStoreInA = new JRadioButton(ResourceBundle.getBundle("me.shengyi.albumpreview.messages").getString("SettingsDialog.rdbtnStoreInA.text")); //$NON-NLS-1$ //$NON-NLS-2$
 		rdbtnStoreInA.setBackground(Color.DARK_GRAY);
 		rdbtnStoreInA.setForeground(Color.WHITE);
-		
+		rdbtnStoreInA.setSelected(((String)cfgDb.getCfgData().get(OPT_NAME.DB_ST.ordinal()).getValue()).equals("DB"));
 		
 		JRadioButton rdbtnStoreInFile = new JRadioButton(ResourceBundle.getBundle("me.shengyi.albumpreview.messages").getString("SettingsDialog.rdbtnStoreInFile.text")); //$NON-NLS-1$ //$NON-NLS-2$
 		rdbtnStoreInFile.setForeground(Color.WHITE);
@@ -112,7 +119,14 @@ public class SettingsDialog extends JDialog {
 		rdbtnGroup.add(rdbtnStoreInFile);
 		rdbtnGroup.add(rdbtnPreviewOnly);
 		
-		rdbtnStoreInA.setSelected(((String)cfgDb.getCfgData().get(OPT_NAME.DB_ST.ordinal()).getValue()).equals("DB"));
+		JLabel lblAlbumFile = new JLabel(ResourceBundle.getBundle("me.shengyi.albumpreview.messages").getString("SettingsDialog.lblAlbumFile.text")); //$NON-NLS-1$ //$NON-NLS-2$
+		lblAlbumFile.setForeground(Color.WHITE);
+		
+		textField = new JTextField();
+		textField.setText("");
+		textField.setColumns(10);
+		
+		JButton btnNewButton = new JButton(ResourceBundle.getBundle("me.shengyi.albumpreview.messages").getString("SettingsDialog.btnNewButton.text")); //$NON-NLS-1$ //$NON-NLS-2$
 		
 		GroupLayout gl_contentPanel = new GroupLayout(contentPanel);
 		gl_contentPanel.setHorizontalGroup(
@@ -140,8 +154,13 @@ public class SettingsDialog extends JDialog {
 							.addComponent(lblNewLabel))
 						.addComponent(lblInfomationUnderEach)
 						.addComponent(lblDatastore)
-						.addComponent(rdbtnStoreInFile, GroupLayout.PREFERRED_SIZE, 248, GroupLayout.PREFERRED_SIZE))
-					.addContainerGap(129, Short.MAX_VALUE))
+						.addComponent(rdbtnStoreInFile, GroupLayout.PREFERRED_SIZE, 248, GroupLayout.PREFERRED_SIZE)
+						.addComponent(lblAlbumFile)
+						.addGroup(gl_contentPanel.createSequentialGroup()
+							.addComponent(textField, GroupLayout.PREFERRED_SIZE, 433, GroupLayout.PREFERRED_SIZE)
+							.addGap(18)
+							.addComponent(btnNewButton, GroupLayout.PREFERRED_SIZE, 88, GroupLayout.PREFERRED_SIZE)))
+					.addContainerGap(39, Short.MAX_VALUE))
 		);
 		gl_contentPanel.setVerticalGroup(
 			gl_contentPanel.createParallelGroup(Alignment.LEADING)
@@ -169,7 +188,13 @@ public class SettingsDialog extends JDialog {
 					.addComponent(rdbtnStoreInFile)
 					.addGap(18)
 					.addComponent(rdbtnPreviewOnly)
-					.addContainerGap(138, Short.MAX_VALUE))
+					.addGap(18)
+					.addComponent(lblAlbumFile)
+					.addPreferredGap(ComponentPlacement.UNRELATED)
+					.addGroup(gl_contentPanel.createParallelGroup(Alignment.BASELINE)
+						.addComponent(textField, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+						.addComponent(btnNewButton))
+					.addContainerGap(69, Short.MAX_VALUE))
 		);
 		contentPanel.setLayout(gl_contentPanel);
 		{

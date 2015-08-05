@@ -31,7 +31,6 @@ public class SettingsDatabase {
 	 * */
 	public SettingsDatabase(){
 		if (dbFile.exists()){
-			//TODO: load settings
 			loadDatabase();
 		}
 		else
@@ -97,7 +96,7 @@ public class SettingsDatabase {
 	private void loadDatabase(){
 		Connection c = null;
 	    Statement stmt = null;
-	    //SimpleEntry<String, Object> keyPair = new SimpleEntry<String, Object>(null);
+	    
 	    try {
 	      Class.forName("org.sqlite.JDBC");
 	      c = DriverManager.getConnection(dbConnectionString);
