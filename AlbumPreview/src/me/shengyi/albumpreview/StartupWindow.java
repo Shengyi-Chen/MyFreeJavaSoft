@@ -122,8 +122,8 @@ public class StartupWindow extends JFrame {
 		setTitle(ResourceBundle.getBundle("me.shengyi.albumpreview.messages").getString("Window_Titile")); //$NON-NLS-1$ //$NON-NLS-2$
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
-		//setBounds(100, 100, 835, windowHeight);
-		setBounds(100, 100, 835, 810);
+		setBounds(100, 100, 835, windowHeight);
+		//setBounds(100, 100, 835, 810);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
@@ -189,6 +189,10 @@ public class StartupWindow extends JFrame {
 					listModel.remove(selectI);
 					//TODO: Clear View
 					initialPicView();
+					textFieldCamera.setText("");
+					textFieldTitle.setText("");
+					textFieldDate.setText("");
+					textFieldDim.setText("");
 				}
 			}
 		});
